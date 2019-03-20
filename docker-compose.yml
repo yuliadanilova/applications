@@ -1,0 +1,93 @@
+# Use postgres/example user/password credentials
+version: '3.7'
+
+networks:
+    internal-service-network:
+        external:
+            name: service-network
+
+services:
+
+  the-accounts-db:
+    image: postgres
+    restart: "no"
+    
+    networks:
+        internal-service-network:
+            aliases:
+                - accounts-db
+        
+    environment:
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+        POSTGRES_DB: accounts
+        
+    expose:
+        - "5432"
+
+  the-accounts-service:    
+    build: ./accountApplication/
+    image: the-accounts-service        
+    restart: "no"
+    depends_on: 
+        - the-accounts-db
+    
+    networks:
+        internal-service-network:
+            aliases:
+                - accounts-host    
+                
+    expose:
+        - "8080"
+        
+    ports:
+        - 8082:8080
+
+  the-customer-db:
+    image: postgres
+    restart: "no"
+
+    networks:
+      internal-service-network:
+        aliases:
+          - customer-db
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: clients
+
+    expose:
+      - "5432"
+
+  the-customer-service:
+    build: ./customerApplication/
+    image: the-customer-service
+    restart: "no"
+    depends_on:
+      - the-customer-db
+
+    networks:
+      internal-service-network:
+        aliases:
+          - customer-host
+
+    expose:
+      - "8080"
+    ports:
+      - 8081:8080
+      
+  the-common-service:
+    build: ./commonService/
+    image: common-service
+    restart: "no"
+    
+    networks:
+      internal-service-network:
+        aliases:
+          - common-service-host
+
+    expose:
+      - "8080"
+    ports:
+      - 8080:8080
